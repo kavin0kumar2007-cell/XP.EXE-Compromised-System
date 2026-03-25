@@ -1,7 +1,6 @@
 # XP.EXE-Compromised-System
 ## XP.EXE is a small interactive web project that simulates a Windows XP-like desktop environment that has been infected by a virus.
 # What happens in the project.
-## Note: BSOD Screen after deleting the virus is a satus of new Clean OS.
 ## The system boots with a Windows XP style boot screen.
 ## The user logs into the desktop.
 ## A virus warning popup appears and the system starts behaving strangely.
@@ -12,6 +11,7 @@
 ## After solving it, the virus is deleted.
 ## The system restarts and shows a BSOD cleanup screen.
 ## The computer boots again and the system is restored.
+## Note: BSOD Screen after deleting the virus is a status of new Clean OS.
 ## Technologies Used
 ## HTML – structure of the system
 ## CSS – Windows XP style UI design
