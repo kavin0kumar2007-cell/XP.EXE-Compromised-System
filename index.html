@@ -7,6 +7,7 @@
         <link rel="stylesheet" href="style.css">
     </head>
     <body>
+       
         <!-- Boot screen-->
          <div id="boot-screen">
             <div class="boot-center">
@@ -163,32 +164,32 @@
                             <div class="sm-body">
                                 <div class="sm-left">
                                     <p class="sm-pin-label">Pinned Programs:</p>
-                                    <div class="sm-app" ondblclick="openApp('notepad')">
+                                    <div class="sm-app" onclick="openApp('notepad')">
                                         <img data-icon="notepadico" src="assets/notepad.png"  style="width:28px;height:28px;" alt="">
                                         <div class="sm-app-info"><strong>Notepad</strong><small>Text editor</small></div>
                                     </div>
-                                    <div class="sm-app" ondblclick="openApp('terminal')">
+                                    <div class="sm-app" onclick="openApp('terminal')">
                                         <img data-icon="terminalIco" src="assets/Command Prompt (1).ico" alt="" style="width:28px;height:28px;" alt="">
                                         <div class="sm-app-info"><strong>Command Prompt</strong><small>command.exe</small></div>
                                     </div>
                                     <div class="sm-divider"></div>
-                                    <div class="sm-app" ondblclick="openApp('scanner')">
+                                    <div class="sm-app" onclick="openApp('scanner')">
                                         <img data-icon="scannerIco" src="assets/scannner.ico" alt="" style="width:28px;height:28px;">
                                         <div class="sm-app-info"><strong>Virus Scanner</strong><small>XP Security</small></div>
                                     </div>
-                                    <div class="sm-app" ondblclick="openApp('mycomputer')">
+                                    <div class="sm-app" onclick="openApp('mycomputer')">
                                         <img data-icon="mycomputer" style="width:28px;height:28px;"  src="assets/My computer.ico" alt="">
                                         <div class="sm-app-info"><strong>My computer</strong><small>File Explorer</small></div>
                                     </div>
                                 </div>
                                 <div class="sm-right">
-                                    <div class="sm-ritem" ondblclick="openApp('mycomputer')">
+                                    <div class="sm-ritem" onclick="openApp('mycomputer')">
                                         <img data-icon="mycomputer" src="assets/My computer.ico" alt="" style="width:16px;height:16px;"> My Computer
                                     </div>
-                                    <div class="sm-ritem" ondblclick="openApp('mycomputer')" >
+                                    <div class="sm-ritem" onclick="openApp('mycomputer')" >
                                         <img  data-icon="folder" src="assets/Documents.ico" alt="" style="width:16px;height:16px;"> My Documents
                                     </div>
-                                    <div class="sm-ritem" ondblclick="openApp('recycle')" >
+                                    <div class="sm-ritem" onclick="openApp('recycle')" >
                                         <img data-icon="recycleIco" src="assets/Full Recycle Bin.ico" alt="" style="width:16px;height:16px;"> Recycle Bin
                                     </div>
                                     <div class="sm-rsep"></div>
@@ -244,7 +245,8 @@
                         </div>
                         <div class="vp-footer">
                                 <button class="vp-scan" onclick="virusPopupScan()" >🛡️ Scan Now</button>
-                                <button class="vp-ignore" onclick="closeVirusPopup()" >Ignore</button>
+                                <!-- <button class="vp-ignore" onclick="closeVirusPopup()" >Ignore</button> -->
+                                 <button class="vp-ignore" onclick="showVirusPopup()">System Locked</button>
                         </div>
                      </div>
          <!-- Generic dialog (search / help / run / props) -->  
@@ -268,7 +270,7 @@
                     <div class="sp-body">
                         <div class="sp-left">
                             <div class="sp-shield">🛡️</div>
-                            <div class="sp-status">PROTECTED</div>
+                            <!-- <div class="sp-status">PROTECTED</div> -->
                         </div>
                         <div class="sp-right">
                             <h3 class="sp-title">Your computer is now Protected!</h3>
@@ -290,14 +292,8 @@
                 </div>
           </div> 
           <!-- /desktop -->
+           <audio id="click-sound" src="assets/erro.mp3" preload="auto"></audio>
+           <audio id="startup-sound" src="assets/windows-xp-startup.mp3" preload="auto"></audio>
         <script src="script.js"></script>
     </body>
 </html>
-<!-- ### Changelog
-- [Completed HTML and CSS and JS part is yet to begin](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/c2e4893)
-- [Virus pop up and Security Alert and Generic dialog html and css](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/dee34f2)
-- [Start Button and Menu Iterms HTML and CSS](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/d871e96)
-- [Coded the BSOD SCREEN and Desktop with app in html and css no js till now](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/77cdb57)
-- [Welcome Screen and JS for global state](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/ed39226)
-- [Boot screen HTML and CSS](https://github.com/kavin0kumar2007-cell/XP.EXE-Compromised-System/commit/506adbc)
- -->

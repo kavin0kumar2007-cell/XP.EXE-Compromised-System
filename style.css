@@ -32,8 +32,16 @@ html,body{
 }
 .boot-ed{ color:#999 ; font-size:12px; margin-top: -6px;}
 .boot-bar-wrap{width:270px;}
-.boot-bar-track{
-    height:14px;background:#1a1a1a; border:1px solid #444; border-radius:2px; overflow: hidden;
+.boot-bar-track {
+    height: 14px;
+    background: #000;
+    border: 1px solid #555;
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 3px;
 }
 .boot-bar-fill{
     height:100%; width:0%;
@@ -47,6 +55,18 @@ html,body{
 }
 .boot-copy{color:#444;font-size: 10px; margin-top:28px;}
 /* Welcome Screen */
+#puzzle-input:focus{
+    outline:none;
+    border:1px solid #316ac5;
+    box-shadow:0 0 2px #316ac5;
+}
+@keyframes welcomeFadeIn {
+    from {opacity: 0;}
+    to {opacity:1;}
+}
+.welcome-fadein {
+    animation: welcomeFadeIn 1.2s ease-in-out forwards;
+}
 #welcome-screen{
     position: fixed; inset: 0; z-index: 9998; background: linear-gradient(180deg,#1258b0 0%,#1a68c8 40% , #2475d0 60%, #1a60b8 100%);
     display: flex; flex-direction: column;
@@ -110,24 +130,7 @@ html,body{
     background-size: cover;
     background-position: center;
 }
-/* #desktop{
-    position:fixed; inset: 0; bottom: 30px; overflow: hidden;
-}
- Bliss Background
-#desktop{
-    background-image: url("assets/Windows\ XP\ wallpaper.jpg");
-}
-#desktop::before{
-    content:'';
-    position: absolute; inset: 0;
-    background:
-    linear-gradient(180deg, #1a5fac 0%, #2070c8 18%, #3a8fd8 36%,#4a9de4 50%, #3aac44 50% , #44bb50 65% , #30a038 80%, #208530 100%);
-    z-index: 0;
-}
-#desktop::after{
 
-} */
-/* DeskTop icons (draggable) */
 .dicon-wrap{
     position:absolute; display: flex; flex-direction: column; align-items: center; gap: 3px;
     width: 74px; padding: 5px 3px; cursor: pointer; z-index: 10; border-radius: 3px;
@@ -292,7 +295,7 @@ html,body{
 }
  /* virus popup */
 #virus-popup{
-    position: fixed; z-index: 3000; width: 400px;
+    position: fixed; z-index: 3000; width: 520px; min-height: 200px;
     background: #ece9d8; border: 1px solid #0c5a9e;
     border-radius: 6px 6px 4px 4px;
     box-shadow: 4px 4px 18px rgba(0,0,0,0.7);
@@ -315,7 +318,7 @@ html,body{
     width: 21px; height: 21px; border-radius: 3px; cursor: pointer;
     font-size: 11px; font-weight: bold; font-family: Tahoma;
 }
-.vp-body{padding: 16px; display: flex; gap: 12px; align-items: flex-start;}
+.vp-body{padding: 16px; display: flex; gap: 16px; align-items: flex-start;}
 .vp-ico{font-size: 38px; flex-shrink: 0;}
 .vp-txt{font-size: 12px; line-height: 1.6; color: #333;}
 .vp-txt strong {color: #cc0000;}
@@ -388,28 +391,97 @@ html,body{
     font-size: 11px; font-weight: bold; font-family: Tahoma;
 }
 
-.sp-body{padding: 20px;display: flex;gap:16px;}
+.sp-body{
+    padding:20px;
+    display:flex;
+    gap:16px;
+    background:#f7f4e9;
+    border-top:1px solid #fff;
+}
 .sp-left{display: flex; flex-direction: column; align-items: center; gap: 6px;flex-shrink: 0;}
-.sp-shield{font-size: 52px; animation: shieldPulse 2s ease infinite;}
+.sp-shield{
+    width:64px;
+    height:64px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:38px;
+    background: radial-gradient(circle at center,#b6ffb6 0%,#4ac04a 60%,#1e8c1e 100%);
+    border:2px solid #0b5f0b;
+    border-radius:10px;
+    box-shadow:
+        inset 0 0 8px rgba(255,255,255,0.6),
+        0 0 8px rgba(0,255,0,0.6);
+}
 @keyframes shieldPulse{
     0%,100%{filter:drop-shadow(0 0 4px #00cc00);}
     50% {filter: drop-shadow(0 0 14px #00ff00)}
 }
-.sp-status{font-size: 10px;font-weight: bold; color: #006600; background: #e0ffe0; border: 1px solid #44aa44; padding: 2px 6px; border-radius: 10px;}
+.sp-status{
+    font-size:10px;
+    font-weight:bold;
+    color:#005500;
+    background:linear-gradient(#eaffea,#bdf0bd);
+    border:1px solid #3a8a3a;
+    padding:3px 8px;
+    border-radius:10px;
+}
 .sp-right{flex:1;}
-.sp-title{font-size: 14px; color: #003366; margin-bottom: 6px;}
+.sp-right p{
+    font-size:12px;
+    color:#444;
+    margin-bottom:10px;
+}
+.sp-title{
+    font-size:15px;
+    font-weight:bold;
+    color:#003366;
+    margin-bottom:8px;
+}
 .sp-sub{font-size: 12px; color: #444; margin-bottom: 12px;}
 .sp-rows{display:flex;flex-direction: column; gap: 4px; margin-bottom: 12px;}
-.sp-row{display:flex; align-items: center; gap: 8px; font-size: 12px;}
-.sp-ok{color: #006600; font-weight: bold; font-size: 13px;}
+.sp-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    padding:2px 0;
+}
+.sp-ok{
+    color:#0a7a0a;
+    font-weight:bold;
+    font-size:14px;
+}
 .sp-thanks{font-size: 12px; color: #003366; font-style: italic; margin-top: 8px; border-top:1px solid #ccc; padding-top: 8px;}
 .sp-footer{padding:8px 16px 12px; text-align:right; border-top: 1px solid #ccc;}
-.sp-footer button {
-    padding: 5px 24px; font-family: Tahoma; font-size: 12px ;cursor: pointer;
-    background:linear-gradient(180deg,#f0ede4,#ddd9cc); border: 1px solid #7f9db9; border-radius: 3px;
+.sp-footer button{
+    padding:5px 22px;
+    font-family:Tahoma;
+    font-size:12px;
+    cursor:pointer;
+    background:linear-gradient(#ffffff,#e0ddd4);
+    border:1px solid #7f9db9;
+    border-radius:3px;
+    box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.8);
 }
-.sp-footer button:hover{background: linear-gradient(180deg,#fff,#eee9dd);}
+.sp-footer button:hover{
+    background:linear-gradient(#ffffff,#f3efe7);
+}
+@keyframes xpPopup {
+    from{
+        transform:translate(-50%,-60%) scale(0.9);
+        opacity:0;
+    }
+    to{
+        transform:translate(-50%,-50%) scale(1);
+        opacity:1;
+    }
+}
 
+#success-popup{
+    animation: xpPopup 0.25s ease-out;
+}
 /* Right click Menu */
 #ctx-menu{
     position: fixed; z-index: 5000; display: none;
@@ -662,23 +734,3 @@ text-align: center; margin-bottom: 14px;}
 ::selection {background: #316ac5; color:white;}
 
 
-/* temporary icon positions - delete later */
-#dicon-mycomputer { left: 14px; top: 14px; }
-#dicon-notepad    { left: 14px; top: 98px; }
-#dicon-scanner    { left: 14px; top: 182px; }
-#dicon-terminal   { left: 14px; top: 266px; }
-#dicon-recycle    { left: 14px; top: 350px; }
-
-
-/* temporary lines  for testing delete later 
-#boot-screen {display: none !important;}
-#welcome-screen{display: flex !important;}*/
-
-
- #boot-screen   { display: none !important; }
-#welcome-screen { display: none !important; }
-#bsod          { display: none !important; }
-#desktop       { display: block !important; }
-#virus-popup{display:none !important}
-#gen-dialog{display:none !important}
-#success-popup{display:none !important}  

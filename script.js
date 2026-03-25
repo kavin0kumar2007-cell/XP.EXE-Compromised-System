@@ -1,5 +1,4 @@
 'use strict';
-//  Global state
 const S = {
     virusAlive : true,
     virusGone : false,
@@ -13,7 +12,7 @@ const S = {
     historyIdx : -1,
     glitchTimer : null,
     popupTimer : null,
-    popupTimer : null,
+    systemLocked : true,
     popupShowing : false
 };
 
@@ -102,6 +101,17 @@ window.addEventListener('load',()=>{
     initDesktopIconPositions();
     initCtxMenu();
     initVirusPopupDrag();
+    document.addEventListener("mousedown", function(e){
+
+    if(!S.virusAlive) return;
+
+    const desktop = document.getElementById("desktop");
+
+    if(desktop && desktop.contains(e.target)){
+        playClick();
+    }
+
+});
 });
 
 function applyAllIcons() {
@@ -113,36 +123,185 @@ function applyAllIcons() {
 
 
 function startBoot() {
-    const bar = document.getElementById('boot-bar');
-    const steps = [
-        [14,380],[28,650],[45,520],[62,780],[79,560],[100,820]
-    ];
-    let i = 0;
-    function next() {
-        if(i >= steps.length) {setTimeout(finishBoot,500);return;}
-        const [pct,delay] = steps[i++];
-        setTimeout(() => {bar.style.width = pct + '%'; next();},delay);
-    }
-    next();
+    const bar = document.querySelector('.boot-bar-fill');
+    let progress = 0;
+
+    const bootTimer = setInterval(() => {
+        progress += Math.random() * 10;  
+
+        if (progress >= 100) {
+            progress = 100;
+            clearInterval(bootTimer);
+            finishBoot();
+        }
+
+        bar.style.width = progress + "%";
+
+    }, 200);
 }
- 
+
+function playStartupSound() {
+    const sound = document.getElementById('startup-sound');
+    if (!sound) return;
+    sound.volume = 0.5;
+    sound.play().catch(() => {
+        document.addEventListener('click', () => {
+            sound.play();
+        }, { once: true });
+    });
+}
+
+function startPuzzle() {
+
+    openGenDialog(
+        "Windows Security Challenge",
+
+        `
+        <div style="font-size:12px;line-height:1.7;width:260px">
+
+        <p><strong>Security Verification Required</strong></p>
+
+        <p>
+        Malware removal requires a human verification step
+        to ensure the system is controlled by a real user.
+        </p>
+
+        <br>
+
+        <p><strong>Solve this problem:</strong></p>
+
+        <div style="
+        font-size:22px;
+        text-align:center;
+        margin:10px 0;
+        font-weight:bold;
+        ">
+        100 - 100 = ?
+        </div>
+
+        <div style="text-align:center">
+
+        <input id="puzzle-input"
+        style="
+        width:80px;
+        padding:4px;
+        border:1px solid #7f9db9;
+        font-family:Tahoma;
+        font-size:12px;
+        text-align:center;
+        ">
+
+        </div>
+
+        <br>
+
+        <div style="text-align:center">
+        <button onclick="submitPuzzle()" 
+        style="
+        padding:4px 14px;
+        font-family:Tahoma;
+        font-size:12px;
+        cursor:pointer;
+        ">
+        Verify
+        </button>
+        </div>
+
+        </div>
+        `
+    );
+}
+function submitPuzzle(){
+
+    const ans = document.getElementById("puzzle-input").value.trim();
+
+    if(ans === "0"){
+
+        closeGenDialog();
+
+        openGenDialog(
+    "Windows Security Center",
+    `
+    <div style="
+        font-family:Tahoma;
+        font-size:14px;
+        line-height:1.8;
+        width:300px;
+        padding:6px;
+    ">
+
+    <div style="
+        font-size:16px;
+        font-weight:bold;
+        color:#003366;
+        margin-bottom:8px;
+    ">
+    ✔ Virus Removed Successfully
+    </div>
+
+    <div>
+    <strong>virus.exe</strong> has been removed from the system.
+    </div>
+
+    <br>
+
+    <div style="
+        font-weight:bold;
+        color:#0a5a0a;
+        font-size:15px;
+        text-align:center;
+    ">
+    Restarting your device...
+    </div>
+
+    </div>
+    `
+);
+
+        setTimeout(()=>{
+            closeGenDialog();
+            triggerDeletion();
+        },4000);
+
+    } else {
+
+        alert("Incorrect answer. Virus still active.");
+
+    }
+}
 function finishBoot() {
     const boot = document.getElementById('boot-screen');
     boot.style.transition = 'opacity 0.7s';
     boot.style.opacity ='0';
     setTimeout (()=> {
         boot.style.display = 'none';
+        playStartupSound();
         showWelcome();
-    },700);
+    },100);
 }
 
-function showWelcome(){
+function showWelcome() {
     const wlc = document.getElementById('welcome-screen');
+    // start hidden
+    wlc.style.opacity = '0';
     wlc.style.display = 'flex';
-    wlc.style.flexDirection ='column'
+    wlc.style.flexDirection = 'column';
+    // play sound at same moment
+    playStartupSound();
+    // short delay then fade in
+    setTimeout(() => {
+        wlc.classList.add('welcome-fadein');
+    }, 100);
 }
+
 
 function startDesktop() {
+
+        const sound = document.getElementById('startup-sound');
+        if(sound) {
+            sound.pause();
+            sound.currentTime = 0;
+        }
     document.getElementById('welcome-screen').style.display = 'none';
     const desktop = document.getElementById('desktop');
     desktop.style.display = 'block';
@@ -200,7 +359,7 @@ function showShutdown() {
     document.getElementById('gd-body').innerHTML = bodyHTML;
     if(footerHTML) document.getElementById('gd-footer').innerHTML =footerHTML;
     else document.getElementById('gd-footer').innerHTML = '<button onclick="closeGenDialog()">OK</button>';
-    document.getElementById('gd-dialog').style.display = 'block';
+    document.getElementById('gen-dialog').style.display = 'block';
 
  }
  function closeGenDialog() { document.getElementById('gen-dialog').style.display ='none';}
@@ -392,6 +551,10 @@ ic.style.top = (14 + i * 84) + 'px';
 //  Window Management
 
 function openApp(appId) {
+    if (S.systemLocked && appId !== 'scanner') {
+    showVirusPopup();
+    return;
+}
     document.getElementById('start-menu').style.display = 'none';
     if(S.openWins[appId]) {
         if(S.openWins[appId].minimized) restoreWin(appId);
@@ -399,7 +562,7 @@ function openApp(appId) {
         return;
     }
     buildWindow(appId);
-    if(appId === 'mycomputer') setTimeout(() => exNav('mycomputer','root'),20);
+    if(appId === 'mycomputer') setTimeout(() => expNav('mycomputer','root'),20);
 }
 const WIN_DEFS  = {
     mycomputer : {title: 'My Computer', icon:'mycomputer',w:620, h:440},
@@ -456,7 +619,7 @@ function closeWin(appId) {
     if (!w) return;
     if(appId =='notepad') saveNotepad();
     w.remove();
-    delete S.openwins[appId];
+    delete S.openWins[appId];
     removeTbBtn(appId);
     if(S.activeWin === appId) S.activeWin = null;
 }
@@ -488,24 +651,24 @@ function maxRestoreWin(appId) {
 }
 
 function focusWin(appId) {
-    document.querySelector('.xp-windows').forEach(w => {
-        w.classList.remove('active');w.classList.app('inactive');
+    document.querySelectorAll('.xp-window').forEach(w => {
+        w.classList.remove('active');w.classList.add('inactive');
     });
     document.querySelectorAll('.tb-btn').forEach(b=>b.classList.remove('active'));
     const w = document.getElementById('win-'+appId);
-    if(w) {w.classList.remove('inactive');w.classList.add('active');w.style.zindex = ++S.windowsZ;}
+    if(w) {w.classList.remove('inactive');w.classList.add('active');w.style.zIndex = ++S.windowsZ;}
     const b = document.getElementById('tbtn-'+appId);
     if(b) b.classList.add('active');
     S.activeWin = appId;
 }
 document.getElementById('windows-container')?.addEventListener('mousedown',e => {
-    const w = e.target.closest('.xp-windows');
+    const w = e.target.closest('.xp-window');
     if(w) focusWin(w.id.replace('win-',''));
 },true);
 
 // taskbar buttons
  function addTbBtn(appId,title,icon) {
-    const bar = document.getAnimations('tb-items');
+    const bar = document.getElementById('tb-items');
     const btn = document.createElement('button');
     btn.className = 'tb-btn active';
     btn.id = 'tbtn-' + appId;
@@ -517,19 +680,23 @@ document.getElementById('windows-container')?.addEventListener('mousedown',e => 
     };
     bar.appendChild(btn);
  }
- function removeTbBtn(id) {document.getElementById('tbtn'+id)?.remove();}
+ function removeTbBtn(id) {document.getElementById('tbtn-'+id)?.remove();}
 
 //  window drag
 
 let _drag = null;
-function winDragStart(e,appId) {
-    if (e.target.closest('.xp-win-controls')) return ;
+function winDragStart(e, appId) {
+    // dont drag if clicking the control buttons
+    if (e.target.closest('.xp-win-controls')) return;
     focusWin(appId);
-    const w = document.getElementById('win-'+appId);
-    if(w?._maxed) return ;
+    const w = document.getElementById('win-' + appId);
+    if (w?._maxed) return;
     _drag = {
-    w, sx: e.clientX, sy: e.clientY,
-    ox: parseInt(w.style.left)||0, oy: parseInt(w.style.top)||0
+        w,
+        sx: e.clientX,
+        sy: e.clientY,
+        ox: parseInt(w.style.left) || 0,
+        oy: parseInt(w.style.top)  || 0
     };
     e.preventDefault();
 }
@@ -548,7 +715,7 @@ document.addEventListener('mouseup',()=>_drag = null);
 // virus popup drag
 
 
-function initVirusPopopDrag() {
+function initVirusPopupDrag() {
     const el = document.getElementById('virus-popup');
     const handle = document.getElementById('vp-drag-handle');
     if(!handle) return;
@@ -573,11 +740,11 @@ function initVirusPopopDrag() {
 function startDragElem(e,el) {
     let d = {sx: e.clientX - el.offsetLeft, sy: e.clientY - el.offsetTop};
     function mm(ev) {
-        el.style.left - (ev.clientX - d.sx) + 'px';
+        el.style.left = (ev.clientX - d.sx) + 'px';
         el.style.top = (ev.clientY - d.sy) + 'px';
     }
     function mu() {document.removeEventListener('mousemove',mm); document.removeEventListener('mouseup',mu);}
-    document.addEventListener('mousemvoe',mm);
+    document.addEventListener('mousemove',mm);
     document.addEventListener('mouseup',mu);
 }
 
@@ -636,13 +803,35 @@ function expNav(eid, path) {
     explorerPaths[eid] = path;
     renderExp(eid,path);
 }
+function openRunDlg() {
+    document.getElementById('start-menu').style.display = 'none';
+    openGenDialog('Run',
+        `<div style="font-size:12px;padding:4px;width:280px;">
+           <p style="margin-bottom:10px;">Type the name of a program to open it.</p>
+           <div style="display:flex;align-items:center;gap:8px;">
+             <label>Open:</label>
+             <input id="run-input" type="text" style="flex:1;padding:4px;border:1px solid #7f9db9;font-size:12px;font-family:Tahoma;"
+               onkeydown="if(event.key==='Enter')doRun()">
+           </div>
+         </div>`,
+        '<button onclick="doRun()">OK</button><button onclick="closeGenDialog()" style="margin-left:6px;">Cancel</button>'
+    );
+}
 
+function doRun() {
+    const val = (document.getElementById('run-input')?.value || '').toLowerCase().trim();
+    closeGenDialog();
+    if (val === 'cmd' || val === 'cmd.exe') { openApp('terminal'); return; }
+    if (val === 'notepad' || val === 'notepad.exe') { openApp('notepad'); return; }
+    if (val === 'explorer' || val === 'explorer.exe') { openApp('mycomputer'); return; }
+    showNotice('Run', `Cannot find '${val}'. Check the name and try again.`, '⚠');
+}
 function expBack(eid) {
     const cur = explorerPaths[eid] || 'root';
     if (cur === 'root') return ;
     const parts = cur.split('/');
     parts.pop();
-    exNav(eid,parts.length ? parts.join('/'):'root');
+    expNav(eid,parts.length ? parts.join('/'):'root');
 }
 function getFSNode(path) {
     if (!path || path === 'root') return null;
@@ -650,7 +839,7 @@ function getFSNode(path) {
     let node = FS;
     for (const p of parts) {
         if (node[p]) {node = node[p];continue;}
-        if (node.childer && node.children[p]) {node = node.children[p]; continue;}
+        if (node.children && node.children[p]) {node = node.children[p]; continue;}
         return null;
     }
     return node;
@@ -658,20 +847,684 @@ function getFSNode(path) {
 
 function renderExp(eid,path) {
     const mainEl  = document.getElementById('exp-main-'+eid);
-    const crumbEl = document.getElementById('exp-crump-'+eid);
-    const statusEl = document.getElementById('exp-status'+eid);
+    const crumbEl = document.getElementById('exp-crumb-'+eid);
+    const statusEl = document.getElementById('exp-status-'+eid);
     const addrEl = document.getElementById('exp-addr');
     if (!mainEl) return;
     let items = [];
     if (path ==='root') {
         if(addrEl) addrEl.value = 'My Computer';
         items = [{name : 'local Disk (C:)',type:'drive',path:'C:'}];
-        if(crumbEl)
+        if(crumbEl) crumbEl.innerHTML = '<span onclick="expNav(\'mycomputer\',\'root\')">My Computer</span>';
+
+    }else {
+        const node = getFSNode(path);
+        if(!node) return ;
+        if (addrEl) addrEl.value = path.replace(/\//g,'\\');
+        if (node.type === 'file') {openFileView(eid,path,node); return;}
+        const ch = node.children || {};
+        items = Object.entries(ch).map(([n,nd])=>({name:n, ...nd,path: path+'/'+n}));
+        if (crumbEl) {
+            const segs = path.split('/');
+            crumbEl.innerHTML = segs.map((s,i) => {
+                const p = segs.slice(0,i+1).join('/');
+                return `<span onclick="expNav('${eid}','${p}')">${s}</span>`;
+            }).join('►');
+        }
     }
+    if(statusEl) statusEl.innerHTML = `<span>${items.length} object${items.length!==1?'s':''}</span>`;
+    mainEl.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'exp-grid';
+    items.forEach(item => {
+        const isV = item.isVirus && S.virusAlive;
+        const icoKey = isV ? 'virusexe'
+        : item.type === 'drive' ? 'drive'
+        : item.type === 'folder' ? 'folder'
+        : (ICO[item.ext] ? item.ext : 'txt');
+        const div = document.createElement('div');
+        div.className = 'exp-item' + (isV?' is-virus': '');
+        div.innerHTML = `<img src="${ICO[icoKey]||ICO.txt}" alt=""><span>${item.name}</span>`;
+    div.onclick = () => { document.querySelectorAll('.exp-item').forEach(x=>x.classList.remove('selected')); div.classList.add('selected'); };
+    div.ondblclick = () => {
+      if (item.type==='folder'||item.type==='drive') expNav(eid, item.path);
+      else openFileView(eid, item.path, item);
+    };
+    grid.appendChild(div);
+  });
+  mainEl.appendChild(grid);
 }
 
+function openFileView(eid, filePath, fileNode) {
+  const fname = filePath.split('/').pop();
+  const isV   = fileNode.isVirus && S.virusAlive;
+  const vid   = 'fv_' + fname.replace(/\./g,'_');
+  if (document.getElementById('win-'+vid)) { focusWin(vid); return; }
+  const offset = Object.keys(S.openWins).length * 24;
+  const w = document.createElement('div');
+  w.className = 'xp-window active';
+  w.id = 'win-' + vid;
+  w.style.left = (180+offset)+'px'; w.style.top = (100+offset)+'px';
+  w.style.width = '440px'; w.style.height = '320px';
+  const titleStr = isV ? `⚠ ${fname} — VIRUS DETECTED` : fname;
+  const icoSrc   = isV ? ICO.virusexe : (ICO[fileNode.ext]||ICO.txt);
+  w.innerHTML = `
+    <div class="xp-titlebar" onmousedown="winDragStart(event,'${vid}')">
+      <img class="xp-win-icon" src="${icoSrc}" alt="">
+      <span class="xp-win-title">${titleStr}</span>
+      <div class="xp-win-controls">
+        <button class="xp-wbtn xp-wbtn-min" onclick="minimizeWin('${vid}')">_</button>
+        <button class="xp-wbtn xp-wbtn-max" onclick="maxRestoreWin('${vid}')">□</button>
+        <button class="xp-wbtn xp-wbtn-close" onclick="closeWin('${vid}')">✕</button>
+      </div>
+    </div>
+    <div class="xp-win-body fv-body">
+      ${isV ? `<div class="fv-warn">⚠ WARNING: This file is malicious! Delete it to restore system health.</div>` : ''}
+      <textarea class="fv-textarea" readonly>${fileNode.content||'(empty)'}</textarea>
+      ${isV ? `
+        <div class="fv-actions">
+          <button class="fv-del-btn" onclick="deleteVirusFromFV('${vid}')">🗑 Delete virus.exe</button>
+          <button class="fv-cancel" onclick="closeWin('${vid}')">Cancel</button>
+        </div>` : ''}
+    </div>`;
+  document.getElementById('windows-container').appendChild(w);
+  S.openWins[vid] = { minimized: false };
+  addTbBtn(vid, fname, icoSrc);
+  focusWin(vid);
+}
+function deleteVirusFromFV(vid) { closeWin(vid); triggerDeletion(); }
+ 
+/* ─── NOTEPAD ────────────────────────────────────── */
+
+function buildNotepad() {
+    const saved = localStorage.getItem('xpexe_np') || '';
+  return `
+    <div class="xp-menubar">
+      <span class="xp-menu-item" onclick="saveNotepad()">File</span>
+      <span class="xp-menu-item">Edit</span>
+      <span class="xp-menu-item">Format</span>
+      <span class="xp-menu-item">View</span>
+      <span class="xp-menu-item">Help</span>
+    </div>
+    <textarea class="np-textarea" id="np-area" oninput="saveNotepad()" style="flex:1;">${saved}</textarea>
+    <div class="np-statusbar">
+      <span>Ln 1, Col 1</span><span>UTF-8</span>
+    </div>`;
+}
+
+function saveNotepad() {
+    const ta = document.getElementById('np-area');
+    if (ta) localStorage.setItem('xpexe_np',ta.value);
+}
+function loadNotepadSaved() {
+
+}
+
+// virus scanner
+
+function buildScanner() {
+    return `<div class="xp-menubar">
+      <span class="xp-menu-item">Scan</span>
+      <span class="xp-menu-item">Quarantine</span>
+      <span class="xp-menu-item">Settings</span>
+      <span class="xp-menu-item">Help</span>
+    </div>
+    <div class="scan-wrap">
+      <div class="scan-logo">
+        <h2>&#9679; XP Virus Scanner Pro</h2>
+        <p>Real-Time Protection v4.2.1 &nbsp;|&nbsp; Definitions: 2024-01-15 &nbsp;|&nbsp; Engine: 8.0.1</p>
+      </div>
+      <div class="scan-info">
+        <p><strong>Computer:</strong> DESKTOP-XP7B2K &nbsp;&nbsp; <strong>OS:</strong> Windows XP Professional SP3</p>
+        <p><strong>Last scan:</strong> <span id="scan-last">${S.scanDone?'Just now':'Never'}</span>
+           &nbsp;&nbsp; <strong>Status:</strong>
+           <span id="scan-status-lbl" style="color:${S.scanHitVirus?'#cc0000':S.scanDone?'#006600':'#cc6600'};">
+             ${S.scanHitVirus?'&#9888; THREAT FOUND':S.scanDone?'Clean':'Scan recommended'}
+           </span></p>
+      </div>
+      <button class="scan-main-btn" id="scan-start-btn" onclick="doScan()">&#9654; Start Full System Scan</button>
+      <div class="scan-prog-lbl" id="scan-prog-lbl">Ready.</div>
+      <div class="scan-prog-track"><div class="scan-prog-fill" id="scan-prog-fill"></div></div>
+      <div class="scan-log" id="scan-log-el"><div style="color:#00cc00;">[READY] XP Virus Scanner engine loaded. Click scan to begin.</div></div>
+      <div class="scan-result" id="scan-result-el"></div>
+      <div class="scan-actions" id="scan-actions-el" style="display:none;">
+        <button class="scan-action-btn" onclick="scanGoToFile()">&#128270; Go to File Location</button>
+        <button class="scan-action-btn" onclick="scanOpenTerminal()">&#9632; Open Terminal</button>
+        <button class="scan-action-btn danger" onclick="startPuzzle()">Solve Puzzle to Delete Virus</button>
+      </div>
+    </div>`;
+}
+
+const SCAN_FILES = [
+    'C:\\Windows\\System32\\kernel32.dll',
+  'C:\\Windows\\System32\\ntdll.dll',
+  'C:\\Windows\\System32\\user32.dll',
+  'C:\\Windows\\Temp\\tmp_4821.dat',
+  'C:\\Documents\\readme.txt',
+  'C:\\Documents\\log.txt',
+  'C:\\Windows\\System32\\explorer.exe',
+  'C:\\Windows\\System32\\cmd.exe',
+  'C:\\Windows\\System32\\notepad.exe',
+  'C:\\Windows\\System32\\virus.exe'
+];
+
+function doScan() {
+    const btn = document.getElementById('scan-start-btn');
+    const fill = document.getElementById('scan-prog-fill');
+    const lbl = document.getElementById('scan-prog-lbl');
+    const log = document.getElementById('scan-log-el');
+    const res = document.getElementById('scan-result-el');
+    const acts = document.getElementById('scan-actions-el');
+     
+    if(!btn) return;
+    btn.disabled = true;
+    log.innerHTML = '';
+    res.style.display = 'none';
+    if (acts) acts.style.display = 'none';
+    scanLog('[INFO] Initializing virus deginition database...','#00aaff');
+    scanLog('[INFO] Mounting scan engine v4.2.1...','#00aaff');
+
+    let i = 0;
+    function next() {
+        if (i >= SCAN_FILES.length) {
+            fill.style.width = '100%';
+            lbl.textContent = 'Scan complete.';
+            btn.disabled = false;
+            S.scanDone = true;
+            document.getElementById('scan-last').textContent = 'Just Now';
+            const statusEl = document.getElementById('scan-status-lbl');
+
+            if(S.virusAlive) {
+                S.scanHitVirus = true;
+                scanLog('','');
+                 S.scanHitVirus = true;
+        scanLog('', '');
+        scanLog('!! THREAT DETECTED !!', '#ff2222;font-weight:bold;font-size:13px');
+        scanLog('[VIRUS] virus.exe  ——  Trojan.Generic.XP', '#ff5555');
+        scanLog('[INFO ] Location: C:\\Windows\\System32\\virus.exe', '#ffaa00');
+        scanLog('[INFO ] Process is currently running. PID: 4821', '#ffaa00');
+        scanLog('[INFO ] Use the actions below to remove the threat.', '#ffaa00');
+        res.style.display = 'block';
+        res.className = 'scan-result found';
+        res.innerHTML = `&#9888; <strong>THREAT FOUND:</strong> virus.exe — Trojan.Generic.XP<br>
+          <small>Location: C:\\Windows\\System32\\virus.exe<br>
+          The virus is actively running (PID: 4821). Use the options below:</small>`;
+        if (acts) acts.style.display = 'flex';
+        if (statusEl) { statusEl.textContent = '⚠ THREAT FOUND'; statusEl.style.color = '#cc0000';
+
+                }
+                document.getElementById('tray-virus').style.display = 'inline';
+            
+            }else {
+                scanLog('[OK] No threats detected. System is clean.','#00ff00');
+                res.style.display = 'block';
+                res.className = 'scan-result clean';
+                res.innerHTML = '&#10004; System is CLEAN — No threats detected.';
+                if (statusEl) {
+                    statusEl.textContent = 'clean'; statusEl.style.color ='#006600';
+                }
+            }
+            return ;
+        }
+        const path = SCAN_FILES[i];
+        const pct = Math.round((i+1) / SCAN_FILES.length * 100);
+        fill.style.width = pct + '%';
+        lbl.textContent = `Scanning... ${pct}%`;
+        const isV  = path.includes('virus.exe') && S.virusAlive;
+        scanLog(`${isV ? '[VIRUS]' : '[  OK ]'} ${path}`, isV ? '#ff5555' : '#00dd00');
+        i++;
+        setTimeout(next, isV ? 550 : 180 + Math.random() * 150);        
+    }
+    setTimeout(next,400);
+}
+
+function scanLog(txt, style) {
+  const el = document.getElementById('scan-log-el');
+  if (!el) return;
+  const d = document.createElement('div');
+  if (style) d.setAttribute('style', style.includes(':') ? style : `color:${style}`);
+  d.textContent = txt || '\u00a0';
+  el.appendChild(d);
+  el.scrollTop = el.scrollHeight;
+}
+function scanGoToFile() {
+  closeVirusPopup();
+  openApp('mycomputer');
+  setTimeout(() => expNav('mycomputer', 'C:/Windows/System32'), 60);
+}
+function scanOpenTerminal() {
+  openApp('terminal');
+  if (!S.openWins['terminal']) setTimeout(() => termPrint('[HINT] Type: delete virus.exe  to remove the threat.', 'tc-warn'), 200);
+}
+function scanDeleteDirect() {
+  if (!S.virusAlive) { showNotice('Info', 'virus.exe has already been deleted.', 'ℹ'); return; }
+  triggerDeletion();
+}
+// Terminal 
 
 
+function buildTerminal() {
+  return `
+    <div class="term-area" id="term-area" onclick="termFocus()">
+      <div class="term-line"><span class="tc-out">Microsoft Windows XP [Version 5.1.2600]</span></div>
+      <div class="term-line"><span class="tc-out">(C) Copyright 1985-2001 Microsoft Corp.</span></div>
+      <div class="term-line"><span class="tc-out">&nbsp;</span></div>
+      <div class="term-line"><span class="tc-warn">WARNING: Abnormal process activity detected on startup.</span></div>
+      <div class="term-line"><span class="tc-out">&nbsp;</span></div>
+      <div id="term-lines"></div>
+      <div class="term-iline">
+        <span class="term-prompt-lbl">C:\\&gt;&nbsp;</span>
+        <input class="term-inp" id="term-inp" type="text" autocomplete="off" spellcheck="false"
+          onkeydown="termKey(event)">
+      </div>
+    </div>`;
+}
+function initTerminal() { setTimeout(() => document.getElementById('term-inp')?.focus(), 60); }
+function termFocus()    { document.getElementById('term-inp')?.focus(); }
+function termKey(e) {
+  if (e.key === 'Enter') {
+    const inp = document.getElementById('term-inp');
+    const val = inp.value.trim();
+    inp.value = '';
+    S.cmdHistory.unshift(val);
+    S.historyIdx = -1;
+    runCmd(val);
+  }
+  if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    const inp = document.getElementById('term-inp');
+    S.historyIdx = Math.min(S.historyIdx + 1, S.cmdHistory.length - 1);
+    inp.value = S.cmdHistory[S.historyIdx] || '';
+  }
+  if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    const inp = document.getElementById('term-inp');
+    S.historyIdx = Math.max(S.historyIdx - 1, -1);
+    inp.value = S.historyIdx < 0 ? '' : (S.cmdHistory[S.historyIdx]||'');
+  }
+}
+function termPrint(text, cls) {
+  const lines = document.getElementById('term-lines');
+  if (!lines) return;
+  const div = document.createElement('div');
+  div.className = 'term-line';
+  div.innerHTML = `<span class="${cls||'tc-out'}">${text||'&nbsp;'}</span>`;
+  lines.appendChild(div);
+  document.getElementById('term-area')?.scrollTo(0, 99999);
+}
+function runCmd(raw) {
+  if (!raw) { termPrint('&nbsp;', ''); return; }
+  termPrint(`C:\\&gt; ${raw}`, 'tc-prompt');
+  const cmd = raw.toLowerCase().trim();
+ 
+  if (cmd === 'help') {
+    termPrint('Available commands:', 'tc-out');
+    termPrint('  help              — Show this list', 'tc-out');
+    termPrint('  dir               — List current directory', 'tc-out');
+    termPrint('  dir system32      — List System32 directory', 'tc-out');
+    termPrint('  tasklist          — Show running processes', 'tc-out');
+    termPrint('  scan              — Quick antivirus scan', 'tc-out');
+    termPrint('  delete virus.exe  — DELETE THE VIRUS ◄◄', 'tc-warn');
+    termPrint('  cls               — Clear screen', 'tc-out');
+    termPrint('  whoami / ver      — System information', 'tc-out');
+    termPrint('&nbsp;', '');
+  } else if (cmd === 'cls' || cmd === 'clear') {
+    document.getElementById('term-lines').innerHTML = '';
+  } else if (cmd === 'dir' || cmd === 'ls') {
+    termPrint(' Volume in drive C is OS &nbsp;&nbsp; Volume Serial Number is 4E21-7CA3', 'tc-out');
+    termPrint(' Directory of C:\\', 'tc-out');
+    termPrint('&nbsp;', '');
+    termPrint('01/15/2024  09:00 AM    &lt;DIR&gt;    Documents', 'tc-out');
+    termPrint('01/15/2024  09:00 AM    &lt;DIR&gt;    Windows', 'tc-out');
+    termPrint('               2 Dir(s)   4,096 MB free', 'tc-out');
+    termPrint('&nbsp;', '');
+  } else if (cmd === 'dir system32' || cmd === 'dir c:\\windows\\system32' || cmd === 'ls system32') {
+    termPrint(' Directory of C:\\Windows\\System32', 'tc-out');
+    termPrint('&nbsp;', '');
+    termPrint('01/15/2024  09:00    1,024,512  explorer.exe', 'tc-out');
+    termPrint('01/15/2024  09:00       47,616  cmd.exe', 'tc-out');
+    termPrint('01/15/2024  09:00      102,912  notepad.exe', 'tc-out');
+    termPrint('01/15/2024  09:00      819,200  kernel32.dll', 'tc-out');
+    termPrint('01/15/2024  09:00      558,080  user32.dll', 'tc-out');
+    if (S.virusAlive) {
+      termPrint('01/15/2024  09:13       ██████  virus.exe  &lt;&lt; SUSPICIOUS', 'tc-err');
+      termPrint('&nbsp;', '');
+      termPrint('&#9888; WARNING: virus.exe is present! Type: delete virus.exe', 'tc-warn');
+    } else {
+      termPrint('&nbsp;', '');
+      termPrint('System32 is clean. No suspicious files found.', 'tc-ok');
+    }
+    termPrint('&nbsp;', '');
+  } else if (cmd === 'tasklist' || cmd === 'ps') {
+    termPrint('Image Name               PID    Mem Usage', 'tc-out');
+    termPrint('======================== ====== ==========', 'tc-out');
+    termPrint('System                       4        220 K', 'tc-out');
+    termPrint('explorer.exe               428      8,452 K', 'tc-out');
+    termPrint('svchost.exe                920      4,312 K', 'tc-out');
+    termPrint('taskmgr.exe               1204      3,128 K', 'tc-out');
+    if (S.virusAlive) {
+      termPrint('virus.exe                 4821     97,432 K  &lt;&lt; MALICIOUS PROCESS', 'tc-err');
+      termPrint('&nbsp;', '');
+      termPrint('&#9888; virus.exe is consuming 97% CPU. Type: delete virus.exe', 'tc-warn');
+    }
+    termPrint('&nbsp;', '');
+  } else if (cmd === 'scan') {
+    termPrint('Running quick scan...', 'tc-out');
+    setTimeout(()=>termPrint('Scanning C:\\...', 'tc-out'), 280);
+    setTimeout(()=>termPrint('Scanning C:\\Windows\\...', 'tc-out'), 560);
+    setTimeout(()=>termPrint('Scanning C:\\Windows\\System32\\...', 'tc-out'), 840);
+    setTimeout(()=>{
+      if (S.virusAlive) {
+        termPrint('THREAT FOUND: virus.exe — C:\\Windows\\System32', 'tc-err');
+        termPrint('Run: delete virus.exe', 'tc-warn');
+      } else {
+        termPrint('Scan complete. No threats found.', 'tc-ok');
+      }
+      termPrint('&nbsp;', '');
+    }, 1200);
+  } else if (
+    cmd === 'delete virus.exe' || cmd === 'del virus.exe' ||
+    cmd === 'rm virus.exe'     || cmd === 'remove virus.exe'
+  ) {
+    if (!S.virusAlive) {
+      termPrint('The file virus.exe does not exist.', 'tc-err');
+      termPrint('&nbsp;', '');
+    } else {
+      termPrint('Terminating process virus.exe (PID: 4821)...', 'tc-out');
+      setTimeout(()=>termPrint('Process terminated successfully.', 'tc-ok'), 500);
+      setTimeout(()=>termPrint('Deleting C:\\Windows\\System32\\virus.exe...', 'tc-out'), 900);
+      setTimeout(()=>{
+        termPrint('virus.exe — DELETED SUCCESSFULLY.', 'tc-ok');
+        termPrint('&nbsp;', '');
+        triggerDeletion();
+      }, 1600);
+    }
+  } else if (cmd === 'whoami') {
+    termPrint('DESKTOP-XP7B2K\\User', 'tc-out'); termPrint('&nbsp;','');
+  } else if (cmd === 'ver') {
+    termPrint('Microsoft Windows XP [Version 5.1.2600]', 'tc-out'); termPrint('&nbsp;','');
+  } else if (cmd === 'ipconfig') {
+    termPrint('Windows IP Configuration', 'tc-out'); termPrint('&nbsp;','');
+    termPrint('Ethernet adapter Local Area Connection:', 'tc-out');
+    termPrint('   Connection-specific DNS Suffix  . :', 'tc-out');
+    termPrint('   IP Address. . . . . . . . . . . : 192.168.1.42', 'tc-out');
+    termPrint('   Subnet Mask . . . . . . . . . . : 255.255.255.0', 'tc-out');
+    termPrint('   Default Gateway . . . . . . . . : 192.168.1.1', 'tc-out');
+    termPrint('&nbsp;','');
+  } else if (cmd === 'date' || cmd === 'time') {
+    const n = new Date();
+    termPrint(`Current ${cmd === 'date'?'date':'time'}: ${n.toLocaleString()}`, 'tc-out');
+    termPrint('&nbsp;','');
+  } else {
+    termPrint(`'${raw}' is not recognized as an internal or external command,`, 'tc-err');
+    termPrint('operable program or batch file.', 'tc-err');
+    termPrint("Type 'help' to see available commands.", 'tc-out');
+    termPrint('&nbsp;', '');
+  }
+}
+function buildRecycle() {
+  return `
+    <div class="xp-menubar">
+      <span class="xp-menu-item">File</span>
+      <span class="xp-menu-item">Edit</span>
+      <span class="xp-menu-item">View</span>
+      <span class="xp-menu-item">Help</span>
+    </div>
+    <div class="xp-toolbar">
+      <button class="xp-tb-btn" onclick="emptyRecycle()">&#128465; Empty Recycle Bin</button>
+    </div>
+    <div class="xp-win-body" id="rb-body" style="background:white;overflow-y:auto;">
+      ${renderRB()}
+    </div>
+    <div class="xp-statusbar" id="rb-status">${S.recycleItems.length} object(s)</div>`;
+}
+function renderRB() {
+  if (!S.recycleItems.length) return '<div class="rb-empty">Recycle Bin is empty.</div>';
+  return S.recycleItems.map(n =>
+    `<div class="rb-item"><img src="${ICO.virusexe}" style="width:16px;height:16px;"> ${n}
+     <span style="margin-left:auto;color:#888;">Deleted</span></div>`
+  ).join('');
+}
+function emptyRecycle() {
+  S.recycleItems = [];
+  const b = document.getElementById('rb-body');
+  const s = document.getElementById('rb-status');
+  if (b) b.innerHTML = renderRB();
+  if (s) s.textContent = '0 objects';
+}
+ 
+/* ─── VIRUS POPUP SYSTEM ─────────────────────────── */
+const VIRUS_MSGS = [
+  { txt: '<strong>Unknown process detected</strong><br><br>A program not recognized by Windows Security is running on your computer.<br><br>Process: <strong style="color:#cc0000">virus.exe</strong><br>Location: C:\\Windows\\System32<br>PID: 4821<br><br>It is recommended you scan immediately.' },
+  { txt: '<strong>Security Breach Detected</strong><br><br>An unauthorized process is attempting to access your network connection.<br><br>Process: virus.exe → <strong>45.76.23.188:4444</strong><br>Status: BLOCKED (for now)<br><br>Your files may be at risk.' },
+  { txt: '<strong>Performance Warning</strong><br><br>An unknown program is consuming <strong style="color:#cc0000">97% of your CPU</strong>.<br><br>Process: virus.exe (PID: 4821)<br>Memory: 97,432 K<br><br>Your computer may become unresponsive.' },
+  { txt: '<strong>Registry Modification Alert</strong><br><br>virus.exe is attempting to write to the Windows Registry.<br><br>Key: HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run<br><br>This is a sign of persistent malware.' },
+  { txt: '<strong>File System Warning</strong><br><br>An unauthorized process is attempting to read files in C:\\Documents.<br><br>This may indicate a keylogger or data-stealing trojan.<br><br>Scan now to protect your data.' },
+];
+let _vpIdx = 0;
+ 
+function scheduleVirusEvents() {
+  if (!S.virusAlive) return;
 
+  setTimeout(() => showVirusPopup(), 400);
 
+  setTimeout(() => {
+    if (S.virusAlive) document.getElementById('tray-virus').style.display = 'inline';
+  }, 8000);
 
+ [8000, 1500, 2200, 3000, 3800].forEach((t) => {
+    setTimeout(() => {
+        if (S.virusAlive && !S.virusGone) showVirusPopup();
+    }, t);
+});
+
+  setTimeout(startGlitch, 180);
+}
+ 
+function showVirusPopup() {
+  if (!S.virusAlive || S.virusGone) return;
+  const msg = VIRUS_MSGS[_vpIdx % VIRUS_MSGS.length];
+  _vpIdx++;
+  document.getElementById('vp-text').innerHTML = msg.txt;
+  const vp = document.getElementById('virus-popup');
+  vp.style.display = 'block';
+
+  vp.style.top   = '60px';
+  vp.style.right = '20px';
+  vp.style.left  = 'auto';
+  S.popupShowing = true;
+  document.getElementById('virus-popup').classList.add('shake');
+}
+function closeVirusPopup() {
+  document.getElementById('virus-popup').style.display = 'none';
+  S.popupShowing = false;
+}
+function virusPopupScan() {
+  closeVirusPopup();
+  openApp('scanner');
+  setTimeout(() => doScan(), 300);
+}
+ 
+function startGlitch() {
+  if (!S.virusAlive || S.virusGone) return;
+  const d = document.getElementById('desktop');
+  let n = 0;
+  function glitch() {
+    if (!S.virusAlive || n > 8) return;
+   d.style.filter =
+`hue-rotate(${Math.random()*360}deg)
+contrast(2)
+saturate(2)
+brightness(1.3)
+blur(${Math.random()*2}px)`;
+   setTimeout(() => {
+    d.style.filter = '';
+    n++;
+    setTimeout(glitch, 2000 + Math.random()*3000);
+}, 700);}
+  glitch();
+}
+function startPuzzle() {
+
+    const a = Math.floor(Math.random()*9)+1;
+    const b = Math.floor(Math.random()*9)+1;
+
+    openGenDialog(
+        "Security Challenge",
+        `
+        <div style="font-size:13px;line-height:1.6;">
+        Malware protection requires human verification.<br><br>
+
+        <strong>Solve the puzzle:</strong><br><br>
+
+        ${a} + ${b} = ?
+
+        <br><br>
+
+        <input id="puzzle-answer"
+        style="width:80px;padding:4px;font-family:Tahoma">
+
+        <button onclick="checkPuzzle(${a+b})"
+        style="margin-left:10px">Submit</button>
+
+        </div>
+        `
+    );
+
+}
+function playClick() {
+
+    const snd = document.getElementById("click-sound");
+
+    if(!snd) return;
+
+    snd.currentTime = 0;
+    snd.play().catch(()=>{});
+
+}
+function checkPuzzle(answer){
+
+    const val = Number(document.getElementById('puzzle-answer').value);
+
+    if(val !== answer){
+        alert("Incorrect answer. Virus still active.");
+        return;
+    }
+
+    closeGenDialog();
+
+    openGenDialog(
+        "Virus Removal",
+        `
+        <div style="font-size:13px">
+        ✔ Puzzle verified<br><br>
+        virus.exe removed successfully.<br><br>
+
+        Restarting your device...
+        </div>
+        `
+    );
+
+    setTimeout(()=>{
+        closeGenDialog();
+        triggerDeletion();
+    },2000);
+
+}
+// virus deletion sequence 
+function triggerDeletion() {
+    if (S.virusGone) return;
+    S.virusAlive = false;
+    S.virusGone = true;
+    S.systemLocked = false;
+
+    try{delete FS['C:'].children['Windows'].children['System32'].children['virus.exe'];} catch (e) {}
+    S.recycleItems.push('virus.exe');
+
+    closeVirusPopup();
+    document.getElementById('tray-virus').style.display ='none';
+    setTimeout(showBSOD , 1000);
+
+}
+
+function showBSOD() {
+    document.getElementById('desktop').style.display = 'none';
+        const bsod   = document.getElementById('bsod');
+        const dotsEl = document.getElementById('bsod-dots');
+        bsod.style.display = 'block';
+        let n = 0;
+        const iv = setInterval(() => { dotsEl.textContent = '.'.repeat((++n % 4) + 1); }, 350);
+    setTimeout(() => {
+        document.getElementById('bsod-done').style.display = 'block';
+
+    },3000);
+    setTimeout(() => {
+        document.getElementById('bsod-reboot').style.display ='block';
+    }, 5500);
+
+    setTimeout(() => {
+        bsod.style.transition = 'opacity 1.2s';
+        bsod.style.opacity ='0';
+        setTimeout(() => {
+            bsod.style.display ='none';
+            showCleanBoot();
+        },1200)
+    },7500);
+}
+
+// clean boot welcome
+function showCleanBoot() {
+    const boot = document.getElementById('boot-screen');
+    boot.style.opacity ='1';
+    boot.style.display = 'flex';
+    boot.style.transition = '';
+    const bar = document.getElementById('boot-bar');
+    bar.style.width ='0%';
+
+    const steps = [[22,320],[55,500],[100,600]];
+    let i = 0;
+    function next() {
+        if (i >=steps.length) {
+            setTimeout(()=> {
+                boot.style.opacity = '0';
+                setTimeout(() => {
+                    boot.style.display ='none';
+                    showCleanWelcome();
+                },500);
+            },400);
+            return;
+        }
+        const[pct,d] = steps[i++];
+        setTimeout(()=>{bar.style.width = pct + '%'; next();},d);
+    }
+    next();
+}
+
+function showCleanWelcome() {
+  const wlc = document.getElementById('welcome-screen');
+  wlc.style.display = 'flex';
+  wlc.style.flexDirection = 'column';
+  const userEl = document.querySelector('.wlc-user');
+  if (userEl) userEl.onclick = showCleanDesktop;
+}
+
+function showCleanDesktop() {
+  document.getElementById('welcome-screen').style.display = 'none';
+  const desktop = document.getElementById('desktop');
+  desktop.style.display = 'block';
+  desktop.style.filter  = '';
+  desktop.style.opacity = '1';
+  startClock();
+ 
+  
+  Object.keys(S.openWins).forEach(id => closeWin(id));
+ 
+  
+  setTimeout(() => {
+    const sp = document.getElementById('success-popup');
+    sp.style.display = 'block';
+    sp.style.top  = '50%';
+    sp.style.left = '50%';
+    sp.style.transform = 'translate(-50%,-50%)';
+  }, 1000);
+}
